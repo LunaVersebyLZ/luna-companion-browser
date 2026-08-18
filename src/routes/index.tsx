@@ -20,6 +20,8 @@ import { MemoryPanel } from "@/components/MemoryPanel";
 import { SettingsPanel } from "@/components/SettingsPanel";
 import { PrivacyPanel } from "@/components/PrivacyPanel";
 import { ReminderToast } from "@/components/ReminderToast";
+import { SearchResultsView } from "@/components/SearchResultsView";
+import { ReaderView } from "@/components/ReaderView";
 import { getEngine } from "@/lib/search-engines";
 import { cn } from "@/lib/utils";
 
@@ -219,24 +221,33 @@ function LunaBrowser() {
             }
           }}
         >
-          <article className="mx-auto max-w-2xl px-10 py-12">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-              {activePage.domain} · {activePage.category}
-            </p>
-            <h1 className="mt-3 text-4xl font-semibold">{activePage.hero ?? activePage.title}</h1>
-            <div className="mt-8 space-y-7">
-              {activePage.sections.map((s) => (
-                <section key={s.heading}>
-                  <h2 className="text-lg font-semibold">{s.heading}</h2>
-                  <p className="mt-2 text-[14.5px] leading-7 text-foreground/85">{s.body}</p>
-                </section>
-              ))}
-            </div>
-            <p className="mt-12 rounded-2xl bg-secondary px-4 py-3 text-[12px] text-muted-foreground">
-              Tip: highlight a sentence, then click Luna and say “explain this part” or “remember
-              this for tonight”.
-            </p>
-          </article>
+          {activePage.kind === "search" ? (
+            <SearchResultsView
+              query={activePage.query ?? ""}
+              engineId={activePage.engineId ?? engineId}
+            />
+          ) : activePage.kind === "reader" ? (
+            <ReaderView url={activePage.href ?? ""} />
+          ) : (
+            <article className="mx-auto max-w-2xl px-10 py-12">
+              <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                {activePage.domain} · {activePage.category}
+              </p>
+              <h1 className="mt-3 text-4xl font-semibold">{activePage.hero ?? activePage.title}</h1>
+              <div className="mt-8 space-y-7">
+                {activePage.sections.map((s) => (
+                  <section key={s.heading}>
+                    <h2 className="text-lg font-semibold">{s.heading}</h2>
+                    <p className="mt-2 text-[14.5px] leading-7 text-foreground/85">{s.body}</p>
+                  </section>
+                ))}
+              </div>
+              <p className="mt-12 rounded-2xl bg-secondary px-4 py-3 text-[12px] text-muted-foreground">
+                Tip: highlight a sentence, then click Luna and say “explain this part” or “remember
+                this for tonight”.
+              </p>
+            </article>
+          )}
         </main>
 
         {side === "memory" && <MemoryPanel onClose={() => setSide(null)} />}
