@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useRef,
   type ReactNode,
 } from "react";
 import { MOCK_PAGES, findPage, type MockPage } from "./mock-web";
@@ -12,6 +13,7 @@ import {
   DEFAULT_ENGINE_ID,
   getEngine,
   isUrlLike,
+  makeReaderPage,
   makeSearchPage,
   toHref,
 } from "./search-engines";
@@ -85,6 +87,8 @@ type LunaState = {
   activePage: MockPage;
   openTab: (query: string) => void;
   navigate: (input: string) => void;
+  openReader: (url: string, title: string) => void;
+  updateActivePage: (patch: Partial<MockPage>) => void;
   engineId: string;
   setEngineId: (id: string) => void;
   closeTab: (id: string) => void;
@@ -136,6 +140,9 @@ export function LunaProvider({ children }: { children: ReactNode }) {
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [dueId, setDueId] = useState<string | null>(null);
   const [engineId, setEngineId] = useState<string>(DEFAULT_ENGINE_ID);
+
+  const activeRef = useRef("");
+  activeRef.current = activeTabId;
 
   useEffect(() => {
     if (!activeTabId && tabs[0]) setActiveTabId(tabs[0].id);
@@ -243,18 +250,26 @@ export function LunaProvider({ children }: { children: ReactNode }) {
       const q = input.trim();
       if (!q) return;
       if (isUrlLike(q)) {
-        if (typeof window !== "undefined") window.open(toHref(q), "_blank", "noopener");
-        openTab(q);
+        openPage(makeReaderPage(toHref(q), ""));
         return;
       }
-      const engine = getEngine(engineId);
-      if (typeof window !== "undefined") {
-        window.open(engine.searchUrl(q), "_blank", "noopener");
-      }
-      openPage(makeSearchPage(q, engine));
+      openPage(makeSearchPage(q, getEngine(engineId)));
     },
-    [engineId, openPage, openTab],
+    [engineId, openPage],
   );
+
+  const openReader = useCallback(
+    (url: string, title: string) => openPage(makeReaderPage(url, title)),
+    [openPage],
+  );
+
+  const updateActivePage = useCallback((patch: Partial<MockPage>) => {
+    setTabs((t) =>
+      t.map((tab) =>
+        tab.id === activeRef.current ? { ...tab, page: { ...tab.page, ...patch } } : tab,
+      ),
+    );
+  }, []);
 
   const closeTab = useCallback((id: string) => {
     setTabs((t) => {
@@ -331,6 +346,8 @@ export function LunaProvider({ children }: { children: ReactNode }) {
     activePage,
     openTab,
     navigate,
+    openReader,
+    updateActivePage,
     engineId,
     setEngineId,
     closeTab,

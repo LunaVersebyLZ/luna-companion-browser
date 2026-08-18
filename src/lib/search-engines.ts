@@ -61,6 +61,10 @@ export function toHref(input: string) {
 export function makeSearchPage(query: string, engine: SearchEngine): MockPage {
   const href = engine.searchUrl(query);
   return {
+    kind: "search",
+    query,
+    engineId: engine.id,
+    href,
     url: href.replace(/^https?:\/\//, ""),
     domain: engine.domain,
     title: `${query} — ${engine.name}`,
@@ -69,17 +73,24 @@ export function makeSearchPage(query: string, engine: SearchEngine): MockPage {
     hero: `${query}`,
     sections: [
       {
-        heading: `Searching ${engine.name}`,
-        body: `Luna sent “${query}” to ${engine.name} and opened the live results in a new system tab. ${engine.name} is your default search engine — you can change it any time in Settings.`,
-      },
-      {
-        heading: "Result URL",
-        body: href,
-      },
-      {
-        heading: "Ask Luna instead",
-        body: `Click Luna and ask her to summarize, explain, or remember this search for later. She only reads what your privacy settings allow.`,
+        heading: `Live ${engine.name} results`,
+        body: `Luna is searching ${engine.name} for “${query}” and showing the results right here.`,
       },
     ],
+  };
+}
+
+export function makeReaderPage(url: string, title: string): import("./mock-web").MockPage {
+  const domain = url.replace(/^https?:\/\//, "").split("/")[0]!.replace(/^www\./, "");
+  return {
+    kind: "reader",
+    href: url,
+    url: url.replace(/^https?:\/\//, ""),
+    domain,
+    title: title || domain,
+    favicon: domain.slice(0, 1).toUpperCase(),
+    category: "Web",
+    hero: title || domain,
+    sections: [],
   };
 }
