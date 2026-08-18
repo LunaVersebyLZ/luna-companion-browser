@@ -8,6 +8,13 @@ import {
   type ReactNode,
 } from "react";
 import { MOCK_PAGES, findPage, type MockPage } from "./mock-web";
+import {
+  DEFAULT_ENGINE_ID,
+  getEngine,
+  isUrlLike,
+  makeSearchPage,
+  toHref,
+} from "./search-engines";
 
 export type Tab = { id: string; page: MockPage };
 
@@ -77,6 +84,9 @@ type LunaState = {
   activeTabId: string;
   activePage: MockPage;
   openTab: (query: string) => void;
+  navigate: (input: string) => void;
+  engineId: string;
+  setEngineId: (id: string) => void;
   closeTab: (id: string) => void;
   selectTab: (id: string) => void;
 
@@ -125,6 +135,7 @@ export function LunaProvider({ children }: { children: ReactNode }) {
   const [robotPos, setRobotPos] = useState({ x: 0, y: 0 });
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [dueId, setDueId] = useState<string | null>(null);
+  const [engineId, setEngineId] = useState<string>(DEFAULT_ENGINE_ID);
 
   useEffect(() => {
     if (!activeTabId && tabs[0]) setActiveTabId(tabs[0].id);
@@ -140,6 +151,7 @@ export function LunaProvider({ children }: { children: ReactNode }) {
       if (data.permissions) setPermissions({ ...DEFAULT_PERMISSIONS, ...data.permissions });
       if (data.workspaceId) setWorkspaceId(data.workspaceId);
       if (data.robotPos) setRobotPos(data.robotPos);
+      if (typeof data.engineId === "string") setEngineId(data.engineId);
     } catch {
       /* ignore */
     }
@@ -149,12 +161,12 @@ export function LunaProvider({ children }: { children: ReactNode }) {
     try {
       window.localStorage.setItem(
         LS,
-        JSON.stringify({ memories, permissions, workspaceId, robotPos }),
+        JSON.stringify({ memories, permissions, workspaceId, robotPos, engineId }),
       );
     } catch {
       /* ignore */
     }
-  }, [memories, permissions, workspaceId, robotPos]);
+  }, [memories, permissions, workspaceId, robotPos, engineId]);
 
   // wake-up sequence
   useEffect(() => {
@@ -213,6 +225,35 @@ export function LunaProvider({ children }: { children: ReactNode }) {
       pulse("curious", 1800);
     },
     [pulse],
+  );
+
+  const openPage = useCallback(
+    (page: MockPage) => {
+      const id = uid();
+      setTabs((t) => [...t, { id, page }]);
+      setActiveTabId(id);
+      setSelection("");
+      pulse("curious", 1800);
+    },
+    [pulse],
+  );
+
+  const navigate = useCallback(
+    (input: string) => {
+      const q = input.trim();
+      if (!q) return;
+      if (isUrlLike(q)) {
+        if (typeof window !== "undefined") window.open(toHref(q), "_blank", "noopener");
+        openTab(q);
+        return;
+      }
+      const engine = getEngine(engineId);
+      if (typeof window !== "undefined") {
+        window.open(engine.searchUrl(q), "_blank", "noopener");
+      }
+      openPage(makeSearchPage(q, engine));
+    },
+    [engineId, openPage, openTab],
   );
 
   const closeTab = useCallback((id: string) => {
@@ -289,6 +330,9 @@ export function LunaProvider({ children }: { children: ReactNode }) {
     activeTabId,
     activePage,
     openTab,
+    navigate,
+    engineId,
+    setEngineId,
     closeTab,
     selectTab,
     selection,
