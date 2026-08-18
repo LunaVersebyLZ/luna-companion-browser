@@ -25,7 +25,7 @@ export function LunaRobot({ onOpen }: Props) {
 
   useEffect(() => {
     if (robotPos.x === 0 && robotPos.y === 0) {
-      setRobotPos({ x: window.innerWidth - 148, y: window.innerHeight - 172 });
+      setRobotPos({ x: 28, y: window.innerHeight - 172 });
     }
     setReady(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
