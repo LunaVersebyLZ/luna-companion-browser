@@ -140,7 +140,7 @@ export function findPage(query: string): MockPage {
   const words = MOCK_PAGES.find((p) =>
     q.split(/\s+/).some((w) => w.length > 3 && p.title.toLowerCase().includes(w)),
   );
-  return words ?? MOCK_PAGES[0];
+  return words ?? MOCK_PAGES[0]!;
 }
 
 export function pageText(page: MockPage) {
