@@ -7,6 +7,8 @@ import {
   Lock,
   Plus,
   RotateCw,
+  Search,
+  Settings,
   ShieldCheck,
   Star,
   X,
@@ -15,8 +17,10 @@ import { LunaProvider, useLuna } from "@/lib/luna-store";
 import { LunaRobot } from "@/components/LunaRobot";
 import { AssistantPanel } from "@/components/AssistantPanel";
 import { MemoryPanel } from "@/components/MemoryPanel";
+import { SettingsPanel } from "@/components/SettingsPanel";
 import { PrivacyPanel } from "@/components/PrivacyPanel";
 import { ReminderToast } from "@/components/ReminderToast";
+import { getEngine } from "@/lib/search-engines";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
@@ -60,8 +64,10 @@ function LunaBrowser() {
     memories,
     setAssistantOpen,
     permissions,
+    engineId,
   } = luna;
-  const [side, setSide] = useState<"memory" | "privacy" | null>("memory");
+  const engine = getEngine(engineId);
+  const [side, setSide] = useState<"memory" | "privacy" | "settings" | null>("memory");
   const [omni, setOmni] = useState("");
 
   useEffect(() => setOmni(activePage.url), [activePage]);
@@ -145,15 +151,20 @@ function LunaBrowser() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              openTab(omni);
+              luna.navigate(omni);
             }}
             className="flex flex-1 items-center gap-2 rounded-full border border-border/70 bg-card px-3.5 py-1.5"
           >
             <Lock className="h-3 w-3 text-primary" />
+            <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <Search className="h-3 w-3" />
+              {engine.name}
+            </span>
             <input
               value={omni}
               onChange={(e) => setOmni(e.target.value)}
               className="flex-1 bg-transparent text-[12.5px] outline-none"
+              placeholder={`Search ${engine.name} or type a URL`}
               aria-label="Address bar"
             />
             <Star className="h-3.5 w-3.5 text-muted-foreground" />
@@ -172,6 +183,16 @@ function LunaBrowser() {
                 {pending}
               </span>
             )}
+          </button>
+          <button
+            onClick={() => setSide(side === "settings" ? null : "settings")}
+            className={cn(
+              "rounded-full border border-border/70 p-2 transition hover:bg-card",
+              side === "settings" && "bg-card",
+            )}
+            aria-label="Search settings"
+          >
+            <Settings className="h-4 w-4" />
           </button>
           <button
             onClick={() => setSide(side === "privacy" ? null : "privacy")}
@@ -220,6 +241,7 @@ function LunaBrowser() {
 
         {side === "memory" && <MemoryPanel onClose={() => setSide(null)} />}
         {side === "privacy" && <PrivacyPanel onClose={() => setSide(null)} />}
+        {side === "settings" && <SettingsPanel onClose={() => setSide(null)} />}
       </div>
 
       {/* status */}
