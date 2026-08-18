@@ -6,6 +6,11 @@ export type MockPage = {
   category: string;
   hero?: string;
   sections: { heading: string; body: string }[];
+  /** "search" and "reader" pages fetch live content inside Luna. */
+  kind?: "mock" | "search" | "reader";
+  query?: string;
+  engineId?: string;
+  href?: string;
 };
 
 export const MOCK_PAGES: MockPage[] = [
