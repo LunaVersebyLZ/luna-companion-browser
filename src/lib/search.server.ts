@@ -25,6 +25,28 @@ function domainOf(url: string) {
   }
 }
 
+/** Official Google Programmable Search JSON API (used when keys are configured). */
+async function googleApi(query: string): Promise<SearchResult[]> {
+  const key = process.env["GOOGLE_SEARCH_API_KEY"];
+  const cx = process.env["GOOGLE_SEARCH_CX"];
+  if (!key || !cx) return [];
+  const res = await fetch(
+    `https://www.googleapis.com/customsearch/v1?key=${encodeURIComponent(key)}&cx=${encodeURIComponent(cx)}&num=10&q=${encodeURIComponent(query)}`,
+  );
+  if (!res.ok) return [];
+  const json = (await res.json()) as {
+    items?: { title?: string; link?: string; snippet?: string }[];
+  };
+  return (json.items ?? [])
+    .filter((i) => i.link)
+    .map((i) => ({
+      url: i.link!,
+      title: i.title ?? i.link!,
+      snippet: i.snippet ?? "",
+      domain: domainOf(i.link!),
+    }));
+}
+
 /** Google's HTML endpoint (works when Google serves the no-JS variant). */
 async function google(query: string): Promise<SearchResult[]> {
   const res = await fetch(
