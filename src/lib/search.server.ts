@@ -126,13 +126,15 @@ export async function fetchResults(query: string, engineId: string): Promise<Sea
       if (r.length) return { results: r, source: "Bing" };
     }
     if (engineId === "google") {
+      const api = await googleApi(query);
+      if (api.length) return { results: api, source: "Google" };
       const r = await google(query);
       if (r.length) return { results: r, source: "Google" };
       const fb = await duck(query);
       return {
         results: fb,
         source: "Google",
-        note: "Google blocked this server-side request, so Luna used a privacy-friendly mirror for these results.",
+        note: "Google served its JavaScript-only page to this request, so Luna used a mirror for these results. Add Google Programmable Search API keys for official Google results.",
       };
     }
     const r = await duck(query);
