@@ -25,6 +25,28 @@ function domainOf(url: string) {
   }
 }
 
+/** Official Google Programmable Search JSON API (used when keys are configured). */
+async function googleApi(query: string): Promise<SearchResult[]> {
+  const key = process.env["GOOGLE_SEARCH_API_KEY"];
+  const cx = process.env["GOOGLE_SEARCH_CX"];
+  if (!key || !cx) return [];
+  const res = await fetch(
+    `https://www.googleapis.com/customsearch/v1?key=${encodeURIComponent(key)}&cx=${encodeURIComponent(cx)}&num=10&q=${encodeURIComponent(query)}`,
+  );
+  if (!res.ok) return [];
+  const json = (await res.json()) as {
+    items?: { title?: string; link?: string; snippet?: string }[];
+  };
+  return (json.items ?? [])
+    .filter((i) => i.link)
+    .map((i) => ({
+      url: i.link!,
+      title: i.title ?? i.link!,
+      snippet: i.snippet ?? "",
+      domain: domainOf(i.link!),
+    }));
+}
+
 /** Google's HTML endpoint (works when Google serves the no-JS variant). */
 async function google(query: string): Promise<SearchResult[]> {
   const res = await fetch(
@@ -104,13 +126,15 @@ export async function fetchResults(query: string, engineId: string): Promise<Sea
       if (r.length) return { results: r, source: "Bing" };
     }
     if (engineId === "google") {
+      const api = await googleApi(query);
+      if (api.length) return { results: api, source: "Google" };
       const r = await google(query);
       if (r.length) return { results: r, source: "Google" };
       const fb = await duck(query);
       return {
         results: fb,
         source: "Google",
-        note: "Google blocked this server-side request, so Luna used a privacy-friendly mirror for these results.",
+        note: "Google served its JavaScript-only page to this request, so Luna used a mirror for these results. Add Google Programmable Search API keys for official Google results.",
       };
     }
     const r = await duck(query);
