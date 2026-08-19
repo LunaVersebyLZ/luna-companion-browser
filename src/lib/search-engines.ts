@@ -58,34 +58,13 @@ export function toHref(input: string) {
   return /^https?:\/\//i.test(s) ? s : `https://${s}`;
 }
 
-export function makeSearchPage(query: string, engine: SearchEngine): MockPage {
-  const href = engine.searchUrl(query);
-  return {
-    kind: "search",
-    query,
-    engineId: engine.id,
-    href,
-    url: href.replace(/^https?:\/\//, ""),
-    domain: engine.domain,
-    title: `${query} — ${engine.name}`,
-    favicon: engine.favicon,
-    category: "Search",
-    hero: `${query}`,
-    sections: [
-      {
-        heading: `Live ${engine.name} results`,
-        body: `Luna is searching ${engine.name} for “${query}” and showing the results right here.`,
-      },
-    ],
-  };
-}
-
-export function makeReaderPage(url: string, title: string): import("./mock-web").MockPage {
+/** A real web page rendered inside Luna (search results included — Google renders its own page). */
+export function makeWebPage(url: string, title?: string): MockPage {
   const domain = url.replace(/^https?:\/\//, "").split("/")[0]!.replace(/^www\./, "");
   return {
-    kind: "reader",
+    kind: "web",
     href: url,
-    url: url.replace(/^https?:\/\//, ""),
+    url,
     domain,
     title: title || domain,
     favicon: domain.slice(0, 1).toUpperCase(),
@@ -94,3 +73,8 @@ export function makeReaderPage(url: string, title: string): import("./mock-web")
     sections: [],
   };
 }
+
+export function makeSearchUrl(query: string, engine: SearchEngine) {
+  return engine.searchUrl(query);
+}
+
