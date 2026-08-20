@@ -24,7 +24,7 @@ export function WebView({ url }: { url: string }) {
       <iframe
         ref={frame}
         key={url}
-        src={`/api/public/proxy?url=${encodeURIComponent(url)}`}
+        src={embedUrl(url)}
         title={url}
         onLoad={() => {
           setLoaded(true);
@@ -67,6 +67,20 @@ export function WebView({ url }: { url: string }) {
       )}
     </div>
   );
+}
+
+/** Google refuses normal framing, but its `igu=1` results page is designed to be embedded. */
+function embedUrl(url: string) {
+  try {
+    const u = new URL(url);
+    if (/(^|\.)google\.[a-z.]+$/i.test(u.hostname) && u.pathname === "/search") {
+      u.searchParams.set("igu", "1");
+      return u.toString();
+    }
+  } catch {
+    /* fall through */
+  }
+  return url;
 }
 
 function safeHost(url: string) {
