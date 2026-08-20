@@ -20,8 +20,7 @@ import { MemoryPanel } from "@/components/MemoryPanel";
 import { SettingsPanel } from "@/components/SettingsPanel";
 import { PrivacyPanel } from "@/components/PrivacyPanel";
 import { ReminderToast } from "@/components/ReminderToast";
-import { SearchResultsView } from "@/components/SearchResultsView";
-import { ReaderView } from "@/components/ReaderView";
+import { WebView } from "@/components/WebView";
 import { getEngine } from "@/lib/search-engines";
 import { cn } from "@/lib/utils";
 
@@ -221,13 +220,8 @@ function LunaBrowser() {
             }
           }}
         >
-          {activePage.kind === "search" ? (
-            <SearchResultsView
-              query={activePage.query ?? ""}
-              engineId={activePage.engineId ?? engineId}
-            />
-          ) : activePage.kind === "reader" ? (
-            <ReaderView url={activePage.href ?? ""} />
+          {activePage.kind === "web" ? (
+            <WebView url={activePage.href ?? ""} />
           ) : (
             <article className="mx-auto max-w-2xl px-10 py-12">
               <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">

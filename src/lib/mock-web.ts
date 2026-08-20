@@ -6,8 +6,8 @@ export type MockPage = {
   category: string;
   hero?: string;
   sections: { heading: string; body: string }[];
-  /** "search" and "reader" pages fetch live content inside Luna. */
-  kind?: "mock" | "search" | "reader";
+  /** "web" pages render the real site inside Luna. */
+  kind?: "mock" | "web";
   query?: string;
   engineId?: string;
   href?: string;

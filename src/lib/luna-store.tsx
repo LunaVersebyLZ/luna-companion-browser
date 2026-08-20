@@ -13,8 +13,7 @@ import {
   DEFAULT_ENGINE_ID,
   getEngine,
   isUrlLike,
-  makeReaderPage,
-  makeSearchPage,
+  makeWebPage,
   toHref,
 } from "./search-engines";
 
@@ -249,17 +248,14 @@ export function LunaProvider({ children }: { children: ReactNode }) {
     (input: string) => {
       const q = input.trim();
       if (!q) return;
-      if (isUrlLike(q)) {
-        openPage(makeReaderPage(toHref(q), ""));
-        return;
-      }
-      openPage(makeSearchPage(q, getEngine(engineId)));
+      const url = isUrlLike(q) ? toHref(q) : getEngine(engineId).searchUrl(q);
+      openPage(makeWebPage(url));
     },
     [engineId, openPage],
   );
 
   const openReader = useCallback(
-    (url: string, title: string) => openPage(makeReaderPage(url, title)),
+    (url: string, title: string) => openPage(makeWebPage(url, title)),
     [openPage],
   );
 
