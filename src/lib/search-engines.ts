@@ -78,3 +78,7 @@ export function makeSearchUrl(query: string, engine: SearchEngine) {
   return engine.searchUrl(query);
 }
 
+/** Backwards-compatible aliases so old imports never break typecheck. */
+export const makeReaderPage = makeWebPage;
+export const makeSearchPage = makeWebPage;
+
