@@ -15,7 +15,7 @@ export function WebView({ url }: { url: string }) {
         if (!l) setBlocked(true);
         return l;
       });
-    }, 4000);
+    }, 8000);
     return () => clearTimeout(t);
   }, [url]);
 
@@ -24,7 +24,7 @@ export function WebView({ url }: { url: string }) {
       <iframe
         ref={frame}
         key={url}
-        src={url}
+        src={`/api/public/proxy?url=${encodeURIComponent(url)}`}
         title={url}
         onLoad={() => {
           setLoaded(true);
