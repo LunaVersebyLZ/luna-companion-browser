@@ -1,39 +1,58 @@
 import { useEffect, useRef, useState } from "react";
 import { ExternalLink, Globe, Loader2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { checkEmbeddable } from "@/lib/embed.functions";
 
 /** Renders a real web page inside Luna. Some sites refuse embedding, so we offer an escape hatch. */
 export function WebView({ url }: { url: string }) {
   const [loaded, setLoaded] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const frame = useRef<HTMLIFrameElement | null>(null);
+  const check = useServerFn(checkEmbeddable);
 
   useEffect(() => {
     setLoaded(false);
     setBlocked(false);
+    let alive = true;
+
+    // Ask the server whether this site allows framing before we trust the iframe.
+    if (!isKnownEmbeddable(url)) {
+      check({ data: { url } })
+        .then((r) => {
+          if (alive && !r.embeddable) setBlocked(true);
+        })
+        .catch(() => {
+          /* ignore — fall back to the timeout heuristic */
+        });
+    }
+
     const t = setTimeout(() => {
       setLoaded((l) => {
         if (!l) setBlocked(true);
         return l;
       });
     }, 8000);
-    return () => clearTimeout(t);
-  }, [url]);
+    return () => {
+      alive = false;
+      clearTimeout(t);
+    };
+  }, [url, check]);
 
   return (
     <div className="relative h-full w-full">
-      <iframe
-        ref={frame}
-        key={url}
-        src={embedUrl(url)}
-        title={url}
-        onLoad={() => {
-          setLoaded(true);
-          setBlocked(false);
-        }}
-        className="h-full w-full rounded-3xl bg-background"
-        referrerPolicy="no-referrer-when-downgrade"
-        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
-      />
+      {!blocked && (
+        <iframe
+          ref={frame}
+          key={url}
+          src={embedUrl(url)}
+          title={url}
+          onLoad={() => setLoaded(true)}
+          className="h-full w-full rounded-3xl bg-background"
+          referrerPolicy="no-referrer-when-downgrade"
+          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+        />
+      )}
+
 
       {!loaded && !blocked && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center rounded-3xl bg-card">
