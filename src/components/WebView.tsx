@@ -88,7 +88,18 @@ export function WebView({ url }: { url: string }) {
   );
 }
 
+/** Google's `igu=1` results page is built for framing, so skip the server check for it. */
+function isKnownEmbeddable(url: string) {
+  try {
+    const u = new URL(url);
+    return /(^|\.)google\.[a-z.]+$/i.test(u.hostname) && u.pathname === "/search";
+  } catch {
+    return false;
+  }
+}
+
 /** Google refuses normal framing, but its `igu=1` results page is designed to be embedded. */
+
 function embedUrl(url: string) {
   try {
     const u = new URL(url);
