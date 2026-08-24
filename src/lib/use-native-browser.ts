@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLuna } from "@/lib/luna-store";
+import type { MockPage } from "@/lib/mock-web";
+
 import { getNative, type NativeTabState } from "@/lib/native-browser";
 
 /**
