@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -21,8 +21,10 @@ import { SettingsPanel } from "@/components/SettingsPanel";
 import { PrivacyPanel } from "@/components/PrivacyPanel";
 import { ReminderToast } from "@/components/ReminderToast";
 import { WebView } from "@/components/WebView";
+import { useNativeBrowser } from "@/lib/use-native-browser";
 import { getEngine } from "@/lib/search-engines";
 import { cn } from "@/lib/utils";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
