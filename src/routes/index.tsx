@@ -150,10 +150,31 @@ function LunaBrowser() {
         {/* omnibox row */}
         <div className="flex items-center gap-2">
           <div className="flex gap-0.5 text-muted-foreground">
-            <button className="rounded-full p-1.5 hover:bg-card" aria-label="Back"><ArrowLeft className="h-4 w-4" /></button>
-            <button className="rounded-full p-1.5 hover:bg-card" aria-label="Forward"><ArrowRight className="h-4 w-4" /></button>
-            <button className="rounded-full p-1.5 hover:bg-card" aria-label="Reload"><RotateCw className="h-4 w-4" /></button>
+            <button
+              onClick={() => nav.back()}
+              disabled={nav.isNative && !nav.canGoBack}
+              className="rounded-full p-1.5 transition hover:bg-card disabled:opacity-35"
+              aria-label="Back"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => nav.forward()}
+              disabled={nav.isNative && !nav.canGoForward}
+              className="rounded-full p-1.5 transition hover:bg-card disabled:opacity-35"
+              aria-label="Forward"
+            >
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => nav.reload()}
+              className="rounded-full p-1.5 transition hover:bg-card"
+              aria-label="Reload"
+            >
+              <RotateCw className={cn("h-4 w-4", nav.loading && "animate-spin")} />
+            </button>
           </div>
+
           <form
             onSubmit={(e) => {
               e.preventDefault();
