@@ -72,8 +72,11 @@ function LunaBrowser() {
   const engine = getEngine(engineId);
   const [side, setSide] = useState<"memory" | "privacy" | "settings" | null>("memory");
   const [omni, setOmni] = useState("");
+  const viewportRef = useRef<HTMLElement | null>(null);
+  const nav = useNativeBrowser(viewportRef);
 
   useEffect(() => setOmni(activePage.url), [activePage]);
+
 
   const pending = memories.filter((m) => !m.done).length;
 
