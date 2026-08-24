@@ -89,7 +89,7 @@ export function useNativeBrowser(viewportRef: React.RefObject<HTMLElement | null
   const live = states[activeTabId];
   useEffect(() => {
     if (!native || !live || activePage.kind !== "web") return;
-    const patch: Record<string, unknown> = {};
+    const patch: Partial<MockPage> = {};
     if (live.url && live.url !== activePage.href) {
       patch.href = live.url;
       patch.url = live.url;
@@ -100,6 +100,7 @@ export function useNativeBrowser(viewportRef: React.RefObject<HTMLElement | null
       }
     }
     if (live.title && live.title !== activePage.title) patch.title = live.title;
+
     if (Object.keys(patch).length) {
       lastUrl.current[activeTabId] = live.url;
       updateActivePage(patch);
