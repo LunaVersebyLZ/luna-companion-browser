@@ -237,6 +237,7 @@ function LunaBrowser() {
       {/* viewport */}
       <div className="flex min-h-0 flex-1 gap-3">
         <main
+          ref={viewportRef}
           className="flex-1 overflow-y-auto rounded-3xl border border-border/70 bg-card shadow-soft"
           onMouseUp={() => {
             const s = window.getSelection()?.toString().trim() ?? "";
@@ -247,8 +248,11 @@ function LunaBrowser() {
           }}
         >
           {activePage.kind === "web" ? (
-            <WebView url={activePage.href ?? ""} />
+            /* In the desktop app this area is reserved for the tab's Chromium
+               WebContentsView; on the web we fall back to the iframe view. */
+            nav.isNative ? null : <WebView url={activePage.href ?? ""} />
           ) : (
+
             <article className="mx-auto max-w-2xl px-10 py-12">
               <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                 {activePage.domain} · {activePage.category}
