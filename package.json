@@ -9,7 +9,12 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "electron": "electron .",
+    "electron:dev": "concurrently -k -n vite,electron -c cyan,magenta \"vite dev\" \"wait-on tcp:8080 && electron .\"",
+    "electron:build": "vite build",
+    "electron:package": "electron-packager . \"Luna Browser\" --overwrite --out=electron-release --ignore=\"^/src\" --ignore=\"^/public\" --ignore=\"^/electron-release\"",
+    "dist:win": "electron-packager . \"Luna Browser\" --platform=win32 --arch=x64 --overwrite --out=electron-release --ignore=\"^/src\" --ignore=\"^/public\" --ignore=\"^/electron-release\""
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -87,5 +92,6 @@
     "typescript-eslint": "^8.56.1",
     "vite": "^8.2.0",
     "wait-on": "^9.1.0"
-  }
+  },
+  "main": "electron/main.cjs"
 }
