@@ -21,6 +21,10 @@ function send(channel, payload) {
   if (win && !win.isDestroyed()) win.webContents.send(channel, payload);
 }
 
+function logNavigation(id, event, details = {}) {
+  console.log(`[Luna navigation][tab:${id}] ${event}`, details);
+}
+
 function stateOf(id, view, extra = {}) {
   const wc = view.webContents;
   return {
@@ -63,24 +67,87 @@ function createTabView(id, url) {
   const wc = view.webContents;
   const push = (extra) => send("luna:tab:state", stateOf(id, view, extra));
 
-  wc.on("did-start-loading", () => push({ loading: true }));
-  wc.on("did-stop-loading", () => push({ loading: false }));
-  wc.on("did-navigate", () => push({}));
-  wc.on("did-navigate-in-page", () => push({}));
-  wc.on("did-redirect-navigation", () => push({}));
+  wc.on("will-navigate", (_event, details) => {
+    logNavigation(id, "will-navigate", {
+      url: details.url,
+      isMainFrame: details.isMainFrame,
+      currentUrl: wc.getURL(),
+    });
+  });
+  wc.on("did-start-loading", () => {
+    logNavigation(id, "did-start-loading", { currentUrl: wc.getURL() });
+    push({ loading: true });
+  });
+  wc.on("did-stop-loading", () => {
+    logNavigation(id, "did-stop-loading", { finalUrl: wc.getURL() });
+    push({ loading: false });
+  });
+  wc.on("did-navigate", (_event, url, httpResponseCode, httpStatusText) => {
+    logNavigation(id, "did-navigate", {
+      url,
+      finalUrl: wc.getURL(),
+      httpResponseCode,
+      httpStatusText,
+    });
+    push({});
+  });
+  wc.on("did-navigate-in-page", (_event, url, isMainFrame) => {
+    logNavigation(id, "did-navigate-in-page", { url, isMainFrame, finalUrl: wc.getURL() });
+    push({});
+  });
+  wc.on("did-redirect-navigation", (_event, url, isInPlace, isMainFrame) => {
+    logNavigation(id, "did-redirect-navigation", {
+      url,
+      isInPlace,
+      isMainFrame,
+      currentUrl: wc.getURL(),
+    });
+    push({});
+  });
   wc.on("page-title-updated", () => push({}));
   wc.on("did-fail-load", (_e, code, desc, failedUrl, isMainFrame) => {
+    logNavigation(id, "did-fail-load", {
+      errorCode: code,
+      errorDescription: desc,
+      failedUrl,
+      isMainFrame,
+      finalUrl: wc.getURL(),
+    });
     if (isMainFrame && code !== -3) push({ error: `${desc} (${failedUrl})` });
   });
 
-  // Popups / target=_blank become new Luna tabs instead of native windows.
-  wc.setWindowOpenHandler(({ url: target }) => {
-    if (/^https?:/i.test(target)) send("luna:tab:open-request", { url: target });
+  // Browser result links sometimes use target=_blank. Keep them in this tab so
+  // the same top-level WebContentsView owns the complete navigation history.
+  wc.setWindowOpenHandler(({ url: target, disposition }) => {
+    logNavigation(id, "popup/new-window", {
+      requestedUrl: target,
+      disposition,
+      currentUrl: wc.getURL(),
+    });
+    if (/^https?:/i.test(target)) {
+      logNavigation(id, "requested navigation URL", { url: target, source: "window-open" });
+      void wc.loadURL(target).catch((error) => {
+        logNavigation(id, "loadURL rejected", {
+          url: target,
+          message: error instanceof Error ? error.message : String(error),
+          finalUrl: wc.getURL(),
+        });
+      });
+    }
     else if (/^mailto:|^tel:/i.test(target)) shell.openExternal(target);
     return { action: "deny" };
   });
 
-  if (url) wc.loadURL(url).catch(() => {});
+  if (url) {
+    logNavigation(id, "requested navigation URL", { url, source: "tab-create" });
+    wc.loadURL(url).catch((error) => {
+      logNavigation(id, "loadURL rejected", {
+        url,
+        message: error instanceof Error ? error.message : String(error),
+        finalUrl: wc.getURL(),
+      });
+    });
+  }
   return view;
 }
 
@@ -143,7 +210,16 @@ ipcMain.handle("luna:tab:close", (_e, { id }) => {
 
 ipcMain.handle("luna:tab:navigate", (_e, { id, url }) => {
   const view = views.get(id) || createTabView(id, null);
-  if (/^https?:\/\//i.test(url)) view.webContents.loadURL(url).catch(() => {});
+  logNavigation(id, "requested navigation URL", { url, source: "address-bar" });
+  if (/^https?:\/\//i.test(url)) {
+    view.webContents.loadURL(url).catch((error) => {
+      logNavigation(id, "loadURL rejected", {
+        url,
+        message: error instanceof Error ? error.message : String(error),
+        finalUrl: view.webContents.getURL(),
+      });
+    });
+  }
   return true;
 });
 

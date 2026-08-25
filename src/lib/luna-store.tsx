@@ -249,9 +249,14 @@ export function LunaProvider({ children }: { children: ReactNode }) {
       const q = input.trim();
       if (!q) return;
       const url = isUrlLike(q) ? toHref(q) : getEngine(engineId).searchUrl(q);
-      openPage(makeWebPage(url));
+      const page = makeWebPage(url);
+      setTabs((current) =>
+        current.map((tab) => (tab.id === activeRef.current ? { ...tab, page } : tab)),
+      );
+      setSelection("");
+      pulse("curious", 1800);
     },
-    [engineId, openPage],
+    [engineId, pulse],
   );
 
   const openReader = useCallback(
