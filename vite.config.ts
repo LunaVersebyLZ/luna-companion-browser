@@ -9,8 +9,8 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 // Electron development uses a dedicated, fixed port so `wait-on` and Electron's
 // loadURL always target the exact same server. `npm run electron:dev` sets
 // LUNA_ELECTRON=1; outside that flow the hosted/sandbox defaults are untouched.
-const isElectronDev = process.env.LUNA_ELECTRON === "1";
-const electronPort = Number(process.env.LUNA_DEV_PORT || 8080);
+const isElectronDev = process.env["LUNA_ELECTRON"] === "1";
+const electronPort = Number(process.env["LUNA_DEV_PORT"] || 8080);
 
 export default defineConfig({
   tanstackStart: {
